@@ -34,6 +34,8 @@ class P4Switch(Switch):
 
         cmd = [
             "simple_switch",
+            "--log-console",
+            "--log-level", "trace",
             "--thrift-port",
             str(self.thrift_port),
             *intf_args,
@@ -89,7 +91,7 @@ def configure_hosts(net):
 
     for host_name, gateway in gateways.items():
         host = net.get(host_name)
-        host.cmd("ip route flush root 0/0")
+        host.cmd("ip route flush default")
         host.cmd(f"ip route add default via {gateway} dev {host_name}-eth0")
         # Students may replace static ARP entries with their own design/testing method.
         host.cmd(f"ip neigh add {gateway} lladdr 00:aa:bb:00:00:01 dev {host_name}-eth0 nud permanent || true")
