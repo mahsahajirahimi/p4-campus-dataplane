@@ -35,7 +35,6 @@ class P4Switch(Switch):
         cmd = [
             "simple_switch",
             "--log-console",
-            "--log-level", "trace",
             "--thrift-port",
             str(self.thrift_port),
             *intf_args,
@@ -95,6 +94,26 @@ def configure_hosts(net):
         host.cmd(f"ip route add default via {gateway} dev {host_name}-eth0")
         # Students may replace static ARP entries with their own design/testing method.
         host.cmd(f"ip neigh add {gateway} lladdr 00:aa:bb:00:00:01 dev {host_name}-eth0 nud permanent || true")
+        # BMv2 receives raw Ethernet frames. Disable veth offloads so
+        # Linux computes valid TCP/UDP checksums before transmission.
+        intf = f"{host_name}-eth0"
+        for feature in ("rx", "tx", "sg", "tso", "gso", "gro"):
+            host.cmd(
+                f"ethtool -K {intf} {feature} off "
+                ">/dev/null 2>&1 || true"
+            )
+
+    # h1 and h2 share the same subnet, so add permanent peer ARP entries.
+    net.get("h1").cmd(
+        "ip neigh replace 10.0.1.20 "
+        "lladdr 00:00:00:00:01:20 "
+        "nud permanent dev h1-eth0"
+    )
+    net.get("h2").cmd(
+        "ip neigh replace 10.0.1.10 "
+        "lladdr 00:00:00:00:01:10 "
+        "nud permanent dev h2-eth0"
+    )
 
 
 def run(json_path, cli=True):

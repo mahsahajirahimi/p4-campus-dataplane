@@ -45,3 +45,8 @@ RUN chmod +x /usr/local/bin/p4-hw-entrypoint
 
 ENTRYPOINT ["/usr/local/bin/p4-hw-entrypoint"]
 CMD ["/bin/bash"]
+
+# Disable checksum/segmentation offloads on Mininet veth interfaces.
+RUN apt-get update \
+    && apt-get install -y ethtool \
+    && rm -rf /var/lib/apt/lists/*
